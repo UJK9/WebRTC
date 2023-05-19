@@ -15,7 +15,7 @@ function handleSignallingData(data){
 }
 let username
 
-function sendUsername() {
+function SendUsername() {
     username = document.getElementById("username-input").value 
     sendData({
         type: "store_user"
