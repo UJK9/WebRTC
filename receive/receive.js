@@ -1,4 +1,5 @@
-const webSocket = new WebSocket("ws://127.0.0.1:3000");
+const ipAddress = "192.168.100.75";
+const webSocket = new WebSocket("ws://" + ipAddress + ":3000");
 
 webSocket.onopen = () => {
     console.log("WebSocket connection established.");
@@ -17,7 +18,7 @@ function handleSignallingData(data) {
         case "offer":
             peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer))
                 .then(() => {
-                    createAndSendAnswer();
+                    return createAndSendAnswer();
                 })
                 .catch((error) => {
                     console.error("Error setting remote description:", error);
@@ -62,7 +63,7 @@ function joinCall() {
     document.getElementById("video-call-div").style.display = "inline";
     navigator.mediaDevices.getUserMedia({
         video: {
-            frameRate: 36,
+            frameRate: 24,
             width: {
                 min: 480,
                 ideal: 720,
@@ -72,47 +73,44 @@ function joinCall() {
         },
         audio: true
     })
-        .then((stream) => {
-            localStream = stream;
-            document.getElementById("local-video").srcObject = localStream;
+    .then((stream) => {
+        localStream = stream;
+        document.getElementById("remote-video").srcObject = localStream;
 
-            const configuration = {
-                iceServers: [
-                    { urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302", "stun:stun2.l.google.com:19302"] },
-                    { urls: "turn:turn", username: "user", credential: "password" }
-                ]
-            };
+        const configuration = {
+            iceServers: [
+                { urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302", "stun:stun2.l.google.com:19302"] },
+                { urls: "turn:turn", username: "user", credential: "password" }
+            ]
+        };
 
-            peerConnection = new RTCPeerConnection(configuration);
-            localStream.getTracks().forEach(track =>
-                peerConnection.addTrack(track, localStream));
-            peerConnection.onaddstream = (e) => {
-                document.getElementById("remote-video").srcObject = e.stream;
-            };
-            peerConnection.onicecandidate = (e) => {
-                if (e.candidate == null)
-                    return;
-                sendData({
-                    type: "send_candidate",
-                    candidate: e.candidate
-                });
-            };
+        peerConnection = new RTCPeerConnection(configuration);
+        localStream.getTracks().forEach(track =>
+            peerConnection.addTrack(track, localStream));
+        peerConnection.ontrack = (e) => {
+            document.getElementById("remote-video").srcObject = e.stream;
+        };
+        peerConnection.onicecandidate = (e) => {
+            if (e.candidate == null)
+                return;
+            sendData({
+                type: "send_candidate",
+                candidate: e.candidate
+            });
+        };
 
-            peerConnection.createAnswer()
-                .then((answer) => {
-                    return peerConnection.setLocalDescription(answer);
-                })
-                .then(() => {
-                    sendData({
-                        type: "join_call",
-                        answer: peerConnection.localDescription.toJSON()
-                    });
-                })
-                .catch((error) => {
-                    console.error("Error creating and sending answer:", error);
-                });
-        })
-        .catch((error) => {
-            console.error("Error accessing media devices:", error);
+        return peerConnection.createOffer();
+    })
+    .then((offer) => {
+        return peerConnection.setLocalDescription(offer);
+    })
+    .then(() => {
+        sendData({
+            type: "store_offer",
+            offer: peerConnection.localDescription.toJSON()
         });
+    })
+    .catch((error) => {
+        console.error("Error accessing media devices:", error);
+    });
 }

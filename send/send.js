@@ -1,4 +1,5 @@
-const webSocket = new WebSocket("ws://127.0.0.1:3000");
+const ipAddress = "192.168.100.75"
+const webSocket = new WebSocket("ws://" + ipAddress + ":3000");
 
 webSocket.onmessage = (event) => {
     handleSignallingData(JSON.parse(event.data))
@@ -35,9 +36,9 @@ function startCall() {
     
     navigator.mediaDevices.getUserMedia({
         video: {
-            frameRate: 36, 
+            frameRate: 24, 
             width: {
-                min: 480, ideal: 720, max: 1200
+                min: 480, ideal: 720, max: 1280
             },
             aspectRatio: 1.33333
         },
