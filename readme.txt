@@ -1,6 +1,6 @@
-WebRTC allows audio and video streaming across different browsers. Only prerequisite is that both sender and receiver should be connected to the same WebSocket IP. 
+WebRTC allows audio and video streaming across different browsers. Only prerequisite is that both sender and receiver should be connected to the same WebSocket IP which in this case is the local ip of the host.  
 
-First of all we run 'node server.js' which activates a WebSocket server and when the server starts listening.
+First of all we run 'node server.js' in terminal which activates a WebSocket server and when the server starts listening.
 
 We run sender.html in a browser which will send messages to the server which will be handled acc to its type. 
  
